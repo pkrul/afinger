@@ -1,0 +1,14 @@
+#!/bin/bash
+
+if [ ! -x `which strfile` ]; then
+   echo "The program strfile is needed."
+   echo "It is included in the BSD fortune-mod package."
+   exit 1
+fi
+
+if [ -z "$1" ] || [ -z "$2" ]; then
+   echo "Usage: $0 sourcefile [datafile]"
+   exit 1
+else
+   /usr/sbin/strfile -i "$1" "$2"
+fi

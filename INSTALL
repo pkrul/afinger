@@ -1,0 +1,36 @@
+
+Installation instructions for the Auxio finger client
+------------------------------------------------------------------------------
+
+Ensure that you are using at least Perl version 5 on any kind of
+UNIX or derivatives.
+
+Tested platforms include Linux 2.x, Solaris 2.x, HP/UX 10.20 and
+FreeBSD.
+
+	0. If your Perl binary is not installed in /usr/bin, open afinger in 
+	   your favorite UNIX editor, and change the first line into the full
+	   path to your Perl binary.
+
+	1. The configuration file afinger.conf is expected to exist
+	   in /usr/local/etc/ by default. 
+	   If your wish to have this located elsewhere on your system, edit
+	   afinger, and change the following line in the header:
+
+	   my $config = '/usr/local/etc/afinger.conf';
+	   into
+	   my $config = 'PATH/TO/afinger.conf';
+
+	   Now you should read and edit afinger.conf as you please.
+
+	   Note: If afinger can't find afinger.conf, it will use the settings
+	   inside afinger itself.
+
+	3. Copy afinger to /usr/local/bin/ and afinger.conf to /usr/local/etc/
+	   or any other path you might have set, and set the installed afinger
+	   to be executable (`chmod 755 /usr/local/bin/afinger`).
+
+	4. Optionally to let your finger daemon use afinger: 
+	   Rename your current finger client.
+	   Create a symbolic link that points from the original finger
+	   location to the afinger location.

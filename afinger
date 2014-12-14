@@ -1,0 +1,399 @@
+#!/usr/bin/perl
+#
+# afinger - Auxio finger
+#
+# Version: 0.43 ($Id: afinger,v 1.5 2002/10/03 20:56:51 pkrul Exp $)
+#
+# Copyright (c) 2000-2002 Pieter Krul <pkrul@auxio.org>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+################################################################################
+
+# Location of the configuration file
+my $config = '/usr/local/etc/afinger.conf';
+
+################################################################################
+# The settings below are used if no configuration file is found.
+
+$forward   = 1;                    # 1 = Display contents of .forward file
+$network   = 1;                    # 1 = Allow network queries (user@host)
+$nologin   = 0;                    # 0 = Display login name
+$noname    = 0;                    # 0 = Display real name
+$nohome    = 0;                    # 0 = Display home directory
+$noshell   = 0;                    # 0 = Display shell
+$nooffice  = 0;                    # 0 = Display office location
+$nophone   = 0;                    # 0 = Display home phone
+$noplan    = 0;                    # 0 = Display $HOME/.plan file
+$noproj    = 0;                    # 0 = Display $HOME/.project file
+$noplntime = 0;                    # 0 = Display .plan modification time
+$noprjtime = 1;                    # 0 = Display .project modification time
+$nomail    = 0;                    # 0 = Display mail information
+$noterm    = 0;                    # 0 = Display terminal information
+$nopub     = 0;                    # 0 = Display public key file
+$nocgi     = 1;                    # 0 = Use as non-interactive CGI
+
+$fortune   = 0;                    # 1 = Use the Fortune program for errors
+$fortpath  = '/usr/games/fortune'; # Location of the Fortune program
+$cookie    = 'bofh';               # Fortunefile to use
+$errline   = 'Today\'s problem:';  # Errorline to use
+
+$maxbyte   = 32768;                # Maximum of Bytes returned via the network
+$minuid    = 500;                  # UIDs below $minuid can't be fingered
+$maxuid    = 60000;                # UIDs above $maxuid can't be fingered
+
+$pubfile   = '.gpg';               # Public Key File
+$plnfile   = '.plan';              # Plan File
+$prjfile   = '.project';           # Project File
+$fwdfile   = '.forward';           # Email Forwarding File
+$nofinger  = '.nofinger';          # Don't-finger-me File
+$mailspl   = '/var/spool/mail';    # Mail Spool location
+
+################################################################################
+
+use strict;
+use Getopt::Long;
+use File::stat;
+use Time::localtime;
+
+# need this so that the config options are in the symbol table
+use vars qw(
+	$forward $network $nologin $noname $nohome $noshell $nooffice
+	$nophone $noplan $noproj $noplntime $noprjtime $nomail $noterm $nopub
+	$fortune $fortpath $cookie $errline $maxbyte $minuid $maxuid $pubfile
+	$plnfile $prjfile $fwdfile $nofinger $mailspl $nocgi
+);
+
+my $login;
+my %clo; # for holding command line options
+my (@pubdata, @prjdata, @plndata);
+my ($status, @result);
+my ($name,$uid,$gcos,$home,$shell,$loc,$office,$offphone,$hmephone);
+my ($home_f,$login_f,$gcos_f,$shell_f,$office_f,$hmephone_f);
+
+sub input {
+	# reset variables for each new user on command line
+	$name = $uid = $gcos = $home = $shell = $loc = $office = '';
+	$offphone = $hmephone = $home_f = $login_f = $gcos_f = '';
+	$shell_f = $office_f = $hmephone_f = $mailspl = '';
+
+	# filter out unwanted characters
+	$login =~ s/([\&;\`'\\\|"*?~<>^\(\)\[\]\{\}\$\n\r])//g;
+	if ($login =~ /^\@/) {
+		diehard();
+	} elsif ($login =~ /\@/) {
+		bughost($login) if ($network) or diehard();
+   	} else {
+		passwdscan($login);
+	}
+}
+
+sub passwdscan {
+	($name,$uid,$gcos,$home,$shell) = (getpwnam($login))[0,2,6,7,8];
+	diehard() if (!$uid or $uid < $minuid or $uid > $maxuid);
+	if (!$shell) { $shell = '/bin/sh'; }
+	if ($gcos) {
+		($gcos,$loc,$offphone,$hmephone) = split (/\,/, $gcos);
+		if ($loc and $offphone) {
+			$office = "$loc\, $offphone";
+		} elsif ($loc) {
+			$office = $loc;
+		} elsif ($offphone) {
+			$office = $offphone;
+		}     
+	} else {
+		$gcos = '(null)';
+	}
+	output($login, $uid, $name, $gcos, $office, $hmephone, $home, $shell);
+}
+
+sub mailscan {
+	if (-f "$mailspl/$login") {
+		my $mailfile = "$mailspl/$login";
+		my($mailsize,$newmail,$lastmail);
+		$mailsize = stat($mailfile)->size;
+		$newmail = ctime(stat($mailfile)->mtime);
+		$lastmail = ctime(stat($mailfile)->atime);
+
+		# some mailreaders leave an empty file after retrieving
+		if ($mailsize eq 0) {
+			print " No mail.\n";
+		} elsif ($newmail eq $lastmail) {
+			print " Mail last read ", $lastmail, "\n";
+		} else {
+			print " New mail received ", $newmail, "\n";
+			print "      Unread since ", $lastmail, "\n";
+		}
+      
+	} else { 
+		print " No mail.\n";
+	}
+}
+
+sub termscan {
+	my ($whocmd,$where,$wmonth,$wday,$wtime,$from);
+
+	if ($^O eq 'linux' ) {
+		$whocmd = 'who -l';
+	} elsif ($^O eq 'hpux' ) {
+		$whocmd = 'who -R';
+	} else {
+		$whocmd = 'who';
+	}
+
+	foreach $_ (`$whocmd`) {
+		if (/^$login/) {
+			chomp;
+			($where,$wmonth,$wday,$wtime,$from) = (split)[1,2,3,4,5];
+			print " On since $wmonth $wday $wtime on $where";
+			if ($from) {
+				$from =~ s/\(|\)//g;
+				print " from ", $from;
+			}
+			print "\n";
+		}
+	}
+}
+
+sub output {
+	if (-f "$home/$nofinger") {
+		$status = "$login decided to disclose all personal information."
+                	unless ($fortune);
+		diehard($status);
+	} else {
+		format LOGIN =
+~Login: ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<~Name: ^<<<<<<<<<<<<<<<<<<<<
+$login_f, $gcos_f
+~Directory: ^<<<<<<<<<<<<<<<<<<<<<<<<<<<~Shell: ^<<<<<<<<<<<<<<<<<<<
+$home_f, $shell_f
+~Office: ^<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< Home Phone:~^<<<<<<<<<<<<<<
+$office_f, $hmephone_f
+.
+      
+		$~ = "LOGIN";
+		$login_f = $login unless $nologin;
+		$gcos_f = $gcos unless $noname;
+		$home_f = $home unless $nohome;
+		$shell_f = $shell unless $noshell;
+		$office_f = $office unless $nooffice;
+		$hmephone_f = $hmephone unless $nophone;
+		write;
+
+		if (!$noterm) {
+			termscan($login, $uid);
+		}
+      
+		if ($forward and -f "$home/$fwdfile") {
+			open(FWD,"$home/$fwdfile") or diehard();
+			print " Mail forwarded to ";
+			while (<FWD>) { 
+				print $_;
+			}
+			close(FWD);
+		}
+      
+		if (!$nomail) {
+			mailscan($login);
+		}
+      
+		if (-f "$home/$pubfile") {
+			if (!$nopub) {
+				open(PUB,"$home/$pubfile") or diehard();
+				print " Public Key:\n";
+				while (<PUB>) { 
+					print $_;
+				}
+				close(PUB);
+			}
+		}
+      
+		if (-f "$home/$prjfile") {
+			if (!$noproj) {
+				print " Project:\n";
+				if (!$noprjtime) {
+					print " Last updated: ",
+						ctime(stat("$home/$prjfile")->mtime), "\n";
+				}
+				open(PRJ,"$home/$prjfile") or diehard();
+				while (<PRJ>) { 
+					print $_;
+				}
+				close(PRJ);
+			}
+		}
+      
+		if (-f "$home/$plnfile") {
+			if (!$noplan) {
+				print " Plan:\n";
+				if (!$noplntime) {
+					print " Last updated: ",
+						ctime(stat("$home/$plnfile")->mtime), "\n";
+				}
+				open(PLN,"$home/$plnfile") or diehard();
+				while (<PLN>) { 
+					print $_;
+				}
+				close(PLN);
+			}
+		} else { 
+			print " No Plan.\n"; 
+		}           
+	}
+}
+
+sub bughost {
+	use Socket;
+
+	my $reply;
+	my ($user, $remotehost) = split(/\@/, $_[0]);
+	my $proto = getprotobyname('tcp');
+	my $addr  = gethostbyname($remotehost) or 
+		($status = "$remotehost: Host unknown.", diehard());
+	my $port = getservbyname('finger', 'tcp');
+	my $sock = sockaddr_in($port, $addr);
+
+	print "[", $remotehost, "]\n";
+	socket(SERVER, AF_INET, SOCK_STREAM, $proto);
+	connect(SERVER, $sock) or 
+		($status = "$remotehost: $!.",diehard());
+	send SERVER, "$user\r\n", 0;
+	read(SERVER, $reply, $maxbyte);
+	close(SERVER);
+	print $reply;
+	exit 0;
+}
+
+sub diehard {
+	if ($fortune) {
+		open(FORTUNE, "$fortpath $cookie |");
+		@result = <FORTUNE>;
+		chomp @result;
+		print $errline, ' ', @result, ".\n";
+		exit 1;
+	} else {
+		$status = 'no such user.' unless ($status);
+		print $errline, ' ', $status, "\n";
+		exit 1;
+	}
+}
+
+sub load_conf {
+	# name of config file
+	my $config_file = shift || $config;
+
+	# all possible options below
+	my @options = qw(
+		forward network login name home shell office phone
+		plan proj plntime prjtime mail term pub fortune fortpath
+		cookie errline maxbyte minuid maxuid pubfile plnfile
+		prjfile fwdfile nofinger mailspl cgi
+	);
+
+	# options that need to have 'no' prepended and negated
+	my @no_options = qw(
+		login name home shell office phone plan proj
+		plntime prjtime mail term pub cgi
+	);
+
+	# options that are not bool
+	my @non_bool_options = qw(
+		fortpath cookie errline maxbyte minuid maxuid
+		pubfile plnfile prjfile fwdfile nofinger mailspl
+	);
+
+	my ($options_re, $no_options_re, $non_bool_options_re);
+
+	# build regular expressions
+	$options_re = '^(' . join('|', @options) . ')$';
+	$no_options_re = '^(' . join('|', @no_options) . ')$';
+	$non_bool_options_re = '^(' . join('|', @non_bool_options) . ')$';
+
+	# turn off strict references
+	no strict 'refs';
+
+	# try to open the config file
+	open(CONF, $config_file) or return;
+
+	# variables to hold config options
+	my ($key, $value);
+
+	# read it line by line
+	while (<CONF>) {
+		next if /^\s*#/ or /^\s*$/;
+		chomp; s/^\s+//; s/\s+$//;
+		($key, $value) = split(/\s+/, $_, 2);
+
+		# lowercase the option name
+		$key = lc $key;
+
+		# make sure this option is valid
+		if ($key !~ /$options_re/o) {
+			print STDERR "afinger: invalid config option '$key' from $config_file line $.\n";
+			next;
+		}
+
+		# check to see if this option is bool
+		if ($key !~ /$non_bool_options_re/o) {
+			if ($value =~ /^(yes|true|1)$/oi) {
+				$value = 1;
+			} else {
+				$value = 0;
+			}
+		}
+
+		# check to see if this is a 'no' option
+		if ($key =~ /$no_options_re/o) {
+			$key = "no$key";
+			$value = not $value;
+		}
+
+		# now that we are here, it is safe to set the
+		# the value of the config option (using sym refs)
+		$$key = $value;
+	}
+
+	close(CONF);
+}
+
+# parse command line options 
+#
+# note that several finger daemons pass arguments to the finger client,
+# for instance '--' on FreeBSD, and '-s' on Solaris. They can be filtered
+# from here.
+# Comment (#) the next line to show the argument(s) if your finger daemon 
+# returns 'unknown user' while the user really does exist.
+Getopt::Long::Configure('pass_through');
+
+GetOptions(
+	\%clo,
+        's!'	# Solaris
+	# 'l!',	# long format
+) or ($status = 'Bad options to afinger', diehard());;
+
+# parse the config file
+load_conf();
+
+print "Content-Type: text/plain\n\n" if (!$nocgi);
+
+# check for usernames
+if (@ARGV) {
+	# loop over all the given usernames
+	foreach my $username (@ARGV) {
+		$login = $username;
+		input($login);
+	}
+} else { 
+	$status = 'Please provide a valid username';
+	diehard($status);
+}

@@ -1,0 +1,59 @@
+
+Changes in Auxio finger
+------------------------------------------------------------------------------
+v0.43:
+	Added support for displaying modification times of .plan and .project
+	Fixed some quotes in the bofh cookie file.
+
+v0.42:	
+	Added support for using afinger as a simple CGI program.
+
+v0.41:
+
+	Support for an external configuration file has been added by
+	Peter Jones.
+
+	Arguments passed by a finger daemon are now being checked with
+	Getopt(), which also brought support for the FreeBSD finger
+	daemon (Peter Jones), and multiple queries at once.
+
+	Overall code cleanup.
+
+	CREDITS and INSTALL files added.
+	
+v0.4:
+	A maximum UID can now be configured (default: 60000).
+
+	getpwnam() is now being used, which has the advantages that besides 
+	it's easier, NIS support was automagically added.
+
+	Terminals and login times are now being displayed using 'who', which
+	is much faster, allthough each OS has it's own idea of command
+	switches.
+
+	Fortune output is no longer configured by default.
+
+v0.31:
+	Input is now being more extensively being filtered for weird 
+	characters such as *()|? etc. This wasn't dangerous before, but it
+	could produce responses like...
+	/^[:.*/: unmatched [] in regexp at /usr/bin/finger line 79, <PASSWD>
+	 chunk 1.
+        ..which isn't that nice to see.
+
+	If a hostname can't be looked up in the DNS, a more sane response is
+	now being given.
+
+	Placed the .forward file check before the mail status check.	
+
+v0.3:
+	A mail status check has been added.
+	
+v0.2:
+	You can now choose which part of the output will be displayed.
+	This is only useful when using afinger together with a finger
+	daemon. See the configuration options in the header of the 
+	script.
+
+v0.1:
+	Initial release.
