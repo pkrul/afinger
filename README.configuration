@@ -1,0 +1,355 @@
+AFINGER CONFIGURATION
+
+
+Blank lines and lines that begin with a # are comments and are ignored.
+
+------------------------------------------------------------------------------
+HOST DISPLAY OPTIONS
+------------------------------------------------------------------------------
+
+minuid <int>   
+
+  Description: UIDs below minuid can't be fingered
+
+  Default: 1000
+
+  Example output:
+
+  $ afinger root
+  >> No such user.
+
+---------------------------------------
+
+maxuid <int> 
+
+  Description: UIDs above maxuid can't be fingered
+
+  Default: 60000
+
+  Example output:
+
+  $ afinger nfsnobody
+  >> No such user.
+
+---------------------------------------
+
+cgi <boolean>
+ 
+  Description: For use as CGI, provides HTTP-header for Content-Type: text/plain,
+
+  Default: no
+
+  Example output:
+
+  $ afinger root
+  Content-Type: text/plain
+
+  >> No such user.
+
+------------------------------------------------------------------------------
+HOST ERROR DISPLAY OPTIONS
+------------------------------------------------------------------------------
+
+fortune
+
+  Description: Use fortune(1) for errors. Fortune / fortune-mod can be used to 
+  obfuscate any errors or brute-force guessing attempts.
+
+  Default: no
+
+  Examples without fortune:               Examples with fortune
+
+  $ afinger user@example.com              $ afinger user@example.com
+  >> example.com: Host unknown.           >> Core error - bus dumped
+
+  $ afinger user                          $ afinger user
+  >> No such user.                        >> Crop circles in the Korn shell.
+
+---------------------------------------
+
+fortpath
+
+  Description: Full path to fortune(1)
+
+  Default: /bin/fortune
+
+
+---------------------------------------
+
+cookie
+
+  Description: What fortune cookie file or directory to use
+
+  Default: /usr/share/games/fortune/bofh-excuses
+
+
+---------------------------------------
+
+cookielen
+
+  Description: Select fortune cookies of maximum cookielen characters long
+
+  Default: 72
+
+
+---------------------------------------
+
+errline
+
+  Description: What to prepend at the beginning of an error line
+
+  Default: >>
+
+
+------------------------------------------------------------------------------
+HOST USER DISPLAY OPTIONS
+------------------------------------------------------------------------------
+
+These options determine what user-controlled information in their own home-
+directories can be used by afinger. Filenames are relative to the path of the
+user (for example .file will be looked for at $HOME/.file)
+
+optoutfile
+
+  Description: Name of file that prevents fingering per user
+
+  Default: .nofinger
+
+  Example output:
+
+  $afinger pkrul
+  >> User not responding.
+
+---------------------------------------
+
+plan
+
+  Description: Display .plan file
+
+  Default: yes
+
+---------------------------------------
+
+planfile
+
+  Description: Path to Plan File in $HOME
+
+  Default: .plan
+
+---------------------------------------
+
+planmtime
+
+  Description: Display .plan modification time
+
+  Default: yes
+
+  Example output:
+
+  $ afinger user
+  Login: user                            Name: User Name
+  Directory:                             Shell: /bin/bash
+  Office: AUX-I/O, NL                    Home Phone: +31123456789
+
+  Plan:
+      Last updated: Tue Sep 29 12:09:25 2015
+
+  This is my plan, baking cookies.
+
+  The recipe will be updated soon.
+
+---------------------------------------
+
+proj
+
+  Description: Display .project file
+
+  Default: yes
+
+---------------------------------------
+
+projfile
+
+  Description: Name of Project File in $HOME 
+    Only the first line will be printed.
+
+  Default: .project
+
+---------------------------------------
+
+projmtime
+
+  Description: Display .project modification time
+
+  Default: yes
+
+  Example output:
+
+  $ afinger user
+  Login: user                            Name: User Name
+  Directory:                             Shell: /bin/bash
+  Office: AUX-I/O, NL                    Home Phone: +31123456789
+
+  Project:
+      Last updated: Mon Sep 28 12:01:10 2015
+
+  Documenting afinger configuration.
+
+---------------------------------------
+
+forward
+
+  Description: Display $HOME/.forward file
+
+  Default: yes
+
+  Example output:
+
+  $ afinger user
+  Login: user                            Name: User Name
+  Directory: /home/user                  Shell: /bin/bash
+
+  On since Oct 4 19:39 on pts/0 from :0.0
+  On since Oct 4 19:40 on pts/1 from :0.0
+
+  Mail forwarded to someuser@example.com
+  No mail.
+  No Plan.
+
+---------------------------------------
+
+fwdfile 
+
+  Description: Name of E-mail forwarding file
+    See also the manpage of aliases(5).
+
+  Default: .forward
+
+
+---------------------------------------
+
+pub
+
+  Description: Display $HOME/.pgpkey Public Key File (PGP/GPG)
+
+  Default: yes
+
+---------------------------------------
+
+pubfile
+
+  Description: Name of Public Key File (PGP/GPG)
+
+  Default: .gpgkey
+
+---------------------------------------
+
+mailspool
+
+  Description: Location of mail spool (Maildir in $HOME, path like /var/mail)
+
+  Default: /var/mail
+           Maildir
+
+---------------------------------------
+
+mail
+
+  Description: Display information of mail spool status (LC_TIME is C)
+
+  Default: yes
+
+  Example output:
+
+  $ finger user
+  Login: pkrul                           Name: Pieter Krul
+  Directory:                             Shell: /bin/bash
+  Office: AUX-I/O, NL                    Home Phone: +31735185555
+
+  New mail received Sat Oct  3 20:08:34 2015
+       Unread since Mon Apr 27 23:13:02 2015
+
+
+------------------------------------------------------------------------------
+LOGIN DISPLAY OPTIONS
+------------------------------------------------------------------------------
+
+  Description: Display login name
+login         yes
+
+
+---------------------------------------
+
+  Description: Display real name
+name          yes
+
+
+---------------------------------------
+
+  Description: Display path to home directory
+home          yes
+
+
+---------------------------------------
+
+  Description: Display users shell
+shell         yes
+
+
+---------------------------------------
+
+  Description: Display office location
+office        yes
+
+
+---------------------------------------
+
+  Description: Display home phone number
+phone         yes
+
+
+---------------------------------------
+
+  Description: Display terminal information
+term          yes
+
+
+------------------------------------------------------------------------------
+SERVICE/CLIENT NETWORK OPTIONS
+------------------------------------------------------------------------------
+
+  Description: Allow network queries from your host like user@example.com
+network       yes
+
+
+---------------------------------------
+
+  Description: Timeout when trying to connect to remote hosts
+network_timeo 3 
+
+
+---------------------------------------
+
+  Description: Maximum receive buffer for network queries (SO_RCVBUF)
+network_recv  4096
+
+
+---------------------------------------
+
+  Description: Maximum number of resolved addresses per host (IPv4+IPv6) used in one query
+maxqry        8
+
+
+---------------------------------------
+
+  Description: Maximum number of resolved IPv4 addresses afinger will use for queries
+maxqry_inet   8
+
+
+---------------------------------------
+
+  Description: Maximum number of resolved IPv6 addresses afinger will use for queries
+maxqry_inet6  8
+
+#############################################################################
+## EOF

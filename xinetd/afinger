@@ -1,0 +1,41 @@
+#
+# This is the configuration for the tcp/stream finger service, where
+# in.fingerd will call afinger.
+#
+# See also xinetd.conf(5)
+#
+
+service finger 
+{
+   disable        = no
+   wait           = no
+   user           = nobody
+   max_load       = 3
+   instance       = 4
+   socket_type    = stream
+   flags          = IPV4
+   # Syntax: bind = (IPv4 address of interface to bind to)
+   # interface    = 192.168.1.2
+   server_args    = -t 10 -p /usr/local/bin/afinger
+   server         = /usr/sbin/in.fingerd
+   log_on_success += DURATION HOST EXIT
+   log_on_failure += USERID HOST ATTEMPT
+}
+
+service finger 
+{
+   disable        = no
+   wait           = no
+   user           = nobody
+   max_load       = 3
+   instance       = 4
+   socket_type    = stream
+   flags          = IPV6
+   # Syntax: bind = (IPv6 address of interface to bind to)
+   # interface    = 2a01:abc:def:0123:4050:6070:80a0:b0c1
+   server_args    = -t 10 -p /usr/local/bin/afinger
+   server         = /usr/sbin/in.fingerd
+   log_on_success += DURATION HOST EXIT
+   log_on_failure += USERID HOST ATTEMPT
+}
+

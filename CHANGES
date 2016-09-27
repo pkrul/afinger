@@ -1,59 +1,92 @@
 
 Changes in Auxio finger
 ------------------------------------------------------------------------------
-v0.43:
-	Added support for displaying modification times of .plan and .project
-	Fixed some quotes in the bofh cookie file.
+v0.45.1:
 
-v0.42:	
-	Added support for using afinger as a simple CGI program.
+    Configuration file options:
+    - Renamed nofinger to optoutfile
+    - Renamed plnfile  to planfile
+    - Renamed plntime  to planmtime
+    - Renamed prjfile  to projfile
+    - Renamed prjtime  to projmtime
+    - Renamed mailspl  to mailspool
+    - Renamed maxbyte  to network_recv
+
+    - Added charcode, to set character encoding format if locale missing
+    - Added cookielen, for maximum cookie length selection
+    - Added network_timeo, to set a timeout when querying remote hosts
+    - Added maxqry, maxqry_inet, maxqry_inet6, to query max. remote
+      addresses.
+
+    Afinger network:
+    - Client now supports IPv4 and IPv6
+    - Support for configurable timeouts in network queries
+    - Max. number of resolved addresses to connect to (total, IPv4, IPv6)
+      is supported via $maxqry, $maxqry_inet, $maxqry_inet6
+    - Perl modules IO::Socket and IO::Select are now used
+    - Remote host data is now received in buffers of $network_recv size
+    - Added whohasips to show IP-addresses with terminals. See README.
+
+    Afinger output:
+    - Only the first line of .forward and .project is displayed
+    - Updates to termscan to reflect changed GNU coreutils options
+    - Updates to mailscan fixing Maildir++ atime/ctime info
+    - Make sure that files can be read before trying to open them
+    - Added support for codepages
+
+v0.43:
+    Added support for displaying modification times of .plan and .project
+    Fixed some quotes in the bofh cookie file.
+
+v0.42:
+    Added support for using afinger as a simple CGI program.
 
 v0.41:
 
-	Support for an external configuration file has been added by
-	Peter Jones.
+    Support for an external configuration file has been added by
+    Peter Jones.
 
-	Arguments passed by a finger daemon are now being checked with
-	Getopt(), which also brought support for the FreeBSD finger
-	daemon (Peter Jones), and multiple queries at once.
+    Arguments passed by a finger daemon are now being checked with
+    Getopt(), which also brought support for the FreeBSD finger
+    daemon (Peter Jones), and multiple queries at once.
 
-	Overall code cleanup.
+    Overall code cleanup.
 
-	CREDITS and INSTALL files added.
-	
+    CREDITS and INSTALL files added.
+
 v0.4:
-	A maximum UID can now be configured (default: 60000).
+    A maximum UID can now be configured (default: 60000).
 
-	getpwnam() is now being used, which has the advantages that besides 
-	it's easier, NIS support was automagically added.
+    getpwnam() is now being used, which has the advantages that besides 
+    it's easier, NIS support was automagically added.
 
-	Terminals and login times are now being displayed using 'who', which
-	is much faster, allthough each OS has it's own idea of command
-	switches.
+    Terminals and login times are now being displayed using 'who', which
+    is much faster, allthough each OS has it's own idea of command
+    switches.
 
-	Fortune output is no longer configured by default.
+    Fortune output is no longer configured by default.
 
 v0.31:
-	Input is now being more extensively being filtered for weird 
-	characters such as *()|? etc. This wasn't dangerous before, but it
-	could produce responses like...
-	/^[:.*/: unmatched [] in regexp at /usr/bin/finger line 79, <PASSWD>
-	 chunk 1.
+    Input is now being more extensively being filtered for weird 
+    characters such as *()|? etc. This wasn't dangerous before, but it
+    could produce responses like...
+    /^[:.*/: unmatched [] in regexp at /usr/bin/finger line 79, <PASSWD>
+     chunk 1.
         ..which isn't that nice to see.
 
-	If a hostname can't be looked up in the DNS, a more sane response is
-	now being given.
+    If a hostname can't be looked up in the DNS, a more sane response is
+    now being given.
 
-	Placed the .forward file check before the mail status check.	
+    Placed the .forward file check before the mail status check.
 
 v0.3:
-	A mail status check has been added.
-	
+    A mail status check has been added.
+
 v0.2:
-	You can now choose which part of the output will be displayed.
-	This is only useful when using afinger together with a finger
-	daemon. See the configuration options in the header of the 
-	script.
+    You can now choose which part of the output will be displayed.
+    This is only useful when using afinger together with a finger
+    daemon. See the configuration options in the header of the 
+    script.
 
 v0.1:
-	Initial release.
+    Initial release.

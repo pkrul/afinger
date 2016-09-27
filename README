@@ -1,149 +1,279 @@
 
 The Auxio Finger Client - afinger
---------------------------------------------------------------------------------
-   
-   A finger client is a user information lookup program, displaying
-   information about login names, real names, shells, login times, idle
-   times, telephone numbers etc.
-   
-   Unfortunately, it has become a bit of a threat to security to reveal
-   all of the information about all logins on a system to everyone.
-   
-   afinger is a simple configurable finger client written in [1]Perl,
-   and has been placed under the [2]GNU General Public License, or GNU GPL.
-   It can be used together with a finger daemon and from the command
-   line, honours a .nofinger file in home directories, you can set a
-   minimum UID, use a Fortune program for erroneous requests, and
-   virtually control each part of the returned information from the
-   configuration options. 
-   
-   When used stand-alone, afinger will behave like any other finger
-   client such as the one distributed with your operating system.
-   
-   If you decide to let remote users retrieve information about the users
-   on your system, you will need a finger daemon. Mostly run from the
-   inetd "super-server", the finger daemon listens for TCP requests
-   received on port 79. Once a remote system connects, the finger daemon
-   reads a single command line terminated by a <CRLF> which is passed to
-   the local finger client. The finger daemon closes its connections as
-   soon as all output is finished.
-   
-   Thus, if you replace your existing finger with afinger, and have a
-   finger daemon running, it will use afinger to return the information
-   requested by a local or remote user, with all fields controlled by
-   either the system administrator or the "fingered" user him- or herself
-   by placing a .nofinger file in the home directory.
-   
-   It might also be of interest that afinger does not honour finger
-   relaying, for example user@host@anotherhost, even if the finger daemon
-   has been configured this way. The in.fingerd manual page states
-   regarding forwarding: "Useful behind firewalls, but probably not wise
-   for security and resource reasons."
 
-   Likewise, requests of the form finger @host are not being honoured,
-   even if the finger daemon has been configured to allow this.
-   
-Requirements
+1. INTRODUCTION
+------------------------------------------------------------------------------
 
-     * Perl 5
-     * Finger daemon (optional)
-     * Fortune (optional)
-       
+A finger client is a user information lookup program, displaying
+information about login names, real names, shells, login times, idle times,
+telephone numbers etc.
+
+Unfortunately, it has become a bit of a threat to security to reveal all of
+the information about all logins on a system to everyone.
+
+afinger is a simple configurable finger client written in [1]Perl, and has
+been placed under the [2]GNU General Public License, or GNU GPL.
+
+It can be used together with a finger daemon and from the command line,
+honours a .nofinger file in home directories, you can set a minimum UID, use
+a Fortune program for erroneous requests, and virtually control each part of
+the returned information from the configuration options. 
+
+When used stand-alone, afinger will behave like any other finger client such
+as the one distributed with your operating system.
+
+If you decide to let remote users retrieve information about the users on
+your system, you will need a finger daemon. Mostly run from the inetd 
+"super-server", the finger daemon listens for TCP requests received on port
+79. Once a remote system connects, the finger daemon reads a single command-
+line terminated by a <CRLF> which is passed to the local finger client. The
+finger daemon closes its connections as soon as all output is finished.
+
+Thus, if you replace your existing finger with afinger, and have a finger
+daemon running, it will use afinger to return the information requested by a
+local or remote user, with all fields controlled by either the system
+administrator or the "fingered" user him- or herself by placing a .nofinger
+file in the home directory, which will disclose all information for this user.
+
+It might also be of interest that afinger does not honour finger relaying,
+for example user@host@anotherhost, even if the finger daemon has been 
+configured this way. The in.fingerd manual page states regarding forwarding:
+"Useful behind firewalls, but probably not wise for security and resource
+reasons."
+
+Likewise, requests of the form finger @host are not being honoured, even if
+the finger daemon has been configured to allow this.
+
+2. REQUIREMENTS
+==============================================================================
+
+  * Perl 5
+  * Finger daemon (optional)
+  * Xinetd (optional)
+  * Fortune (optional)
+    
 Tested Platforms
 
-     * Linux 2.x
-     * Solaris 2.x
-     * HP/UX 10.20
-     * FreeBSD
+  * Linux 2.x, 3.x, 4.x
+  * Solaris 2.x
+  * HP/UX 10.20
+  * FreeBSD
+
   
-Installation
+3. INSTALLATION
+==============================================================================
 
-   Please see the file INSTALL, which contains the installation instructions.
+Please see the file INSTALL, which contains the installation instructions.
 
-Configuration
+4. CONFIGURATION
+==============================================================================
 
-   The configuration for Auxio finger can be set from the configuration file 
-   afinger.conf.
+The configuration for Auxio finger can be set from the configuration file 
+afinger.conf.
 
-      option  default                                              explanation
-      --------------------------------------------------------------------------
 
-      forward   yes   The contents of an existing $HOME/.forward file of the
-                      login (for email forwarding) can be displayed.
-      network   yes   Allow network queries (user@host). This isn't the same as
-                      forwarding.
-      login     yes   Display login name.
-      name      yes   Display real name.
-      home      yes   Display home directory.
-      shell     yes   Display shell.
-      office    yes   Display office location.
-      phone     yes   Display home phone.
-      plan      yes   Display $HOME/.plan file.
-      proj      yes   Display $HOME/.project file.
-      plntime   yes   Display .plan modification time
-      prjtime   no    Display .project modification time
-      mail      yes   Display mail status information.
-      term      yes   Display terminal information.
-      pub       yes   Display public key file.
-      fortune   no    Use the Fortune program for errors.     
-      usecgi    no    Use afinger as CGI script.
-   
+   forward   yes   The contents of an existing $HOME/.forward file of the
+                   login (for email forwarding) can be displayed.
+   network   yes   Allow network queries (user@host). This isn't the same as
+                   forwarding.
+   login     yes   Display login name.
+   name      yes   Display real name.
+   home      yes   Display home directory.
+   shell     yes   Display shell.
+   office    yes   Display office location.
+   phone     yes   Display home phone.
+   plan      yes   Display $HOME/.plan file.
+   proj      yes   Display $HOME/.project file.
+   plntime   yes   Display .plan modification time
+   prjtime   no    Display .project modification time
+   mail      yes   Display mail status information.
+   term      yes   Display terminal information.
+   pub       yes   Display public key file.
+   fortune   no    Use the Fortune program for errors.     
+   usecgi    no    Use afinger as CGI script.
+
+5. EXAMPLES
+==============================================================================
+
 Output Examples
-   
-   afinger used locally on a user with an UID below the minimum level
-   returning a Fortune cookie:
 
-      $ afinger root
-      Today's problem: Disk or processor on fire.
+afinger used locally on a user with an UID below the minimum level returning a
+Fortune cookie:
 
-   Using afinger on a remote user with several fields omitted by afinger:
+   $ afinger root
+   Today's problem: Disk or processor on fire.
 
-      $ afinger pkrul@www.auxio.org
-      [www.auxio.org]
-       Login:                                  Name: Pieter Krul
-       Office:                                 Home Phone: +31185189642
-       New mail received Mon Dec 25 00:45:38 2000
-            Unread since Sun Dec 24 23:00:37 2000
-       No Plan.
+Using afinger on a remote user with several fields omitted by afinger:
 
-   It is also possible for instance to omit all fields, except a ~/.plan,
-   to create output similar to the one returned when you finger
-   linux@www.kernel.org
-   
-Fortunes
-   
-   The BOFH fortune cookie file (bofh.dat) is included in the afinger package.
-   It is based on [3]The BOFH excuses by Jeff Ballard et al.
-   This file can be copied to eg. /usr/share/games/fortunes/ or wherever
-   the cookies may be placed on the system, and be used directly by the
-   fortune program, if installed.
-   
-Download
-   
-   There are currently no Debian, RPM or PKG packages available of Auxio
-   Finger.
-   
-   The latest version of afinger is 0.43, available from
-   HTTP: http://ftp.auxio.org/pub/auxio/afinger/afinger-latest.tar.gz
+   $ afinger pkrul@www.auxio.org
+   [www.auxio.org]
+    Login:                                  Name: Pieter Krul
+    Office:                                 Home Phone: +31185189642
+    New mail received Mon Dec 25 00:45:38 2000
+         Unread since Sun Dec 24 23:00:37 2000
+    No Plan.
 
-   Development and stable versions:
-   https://github.com/pkrul/afinger
+It is also possible for instance to omit all fields, except a ~/.plan, to
+create output similar to the one returned when you finger linux@www.kernel.org
 
-   Older versions of afinger:
-   
-   HTTP:  http://ftp.auxio.org/pub/auxio/afinger/afinger-0.42.tar.gz
-   HTTP:  http://ftp.auxio.org/pub/auxio/afinger/afinger-0.41.tar.gz
-   HTTP:  http://ftp.auxio.org/pub/auxio/afinger/afinger-0.4.tar.gz
-   HTTP:  http://ftp.auxio.org/pub/auxio/afinger/afinger-0.31.tar.gz
-   HTTP:  http://ftp.auxio.org/pub/auxio/afinger/afinger-0.3.tar.gz
-   HTTP:  http://ftp.auxio.org/pub/auxio/afinger/afinger-0.2.tar.gz
-   HTTP:  http://ftp.auxio.org/pub/auxio/afinger/afinger-0.1.tar.gz
+Using afinger on a remote user with all fields enabled:
 
-Last page modification: 03 October,  2002 - Pieter Krul
-Update for Github:      14 December, 2014 - Pieter Krul
+$ finger pkrul@auxio.org
+[ auxio.org (2a01:7c8:aab5:116:1010:1010:1010:1010) ]
+Login: pkrul                           Name: Pieter Krul
+Directory: /home/pkrul                 Shell: /bin/bash
+Office: AUX-I/O, NL                    Home Phone: +31735185555
 
-References
+On since Sep 29 03:06 on pts/0 from 94.211.64.250
+On since Sep 29 04:56 on pts/1 from 2001:1af8:fe00:47d::2
+On since Sep 29 05:04 on pts/2 from 2a01:7c8:aab5:116::1
+
+Mail forwarded to some_mailbox@example.com
+New mail received Sun Apr 26 06:59:45 2015
+     Unread since Fri Nov 14 21:52:57 2014
+
+GnuPG/PGP Public Key:
+
+pub   1024D/B1EF0DC4 2000-10-23
+      Key fingerprint = 5222 5AA2 636F E6D0 7F14  1670 8C3D CE32 B1EF 0DC4
+uid                  Pieter Krul <pkrul@auxio.org>
+uid                  Pieter Krul <p@krul.cc>
+uid                  Pieter Krul <pieter@krul.cc>
+uid                  Pieter Krul <pkrul@snow.nl>
+uid                  Pieter Krul <pieter.krul@snow.nl>
+uid                  [jpeg image of size 16731]
+uid                  [jpeg image of size 5169]
+uid                  Pieter Krul <pieter.krul@pharmapartners.nl>
+sub   1024g/0A261BCF 2000-10-23
+
+Project:
+     Last updated: Tue Sep 29 05:35:25 2015
+
+See https://github.com/pkrul
+
+Plan:
+     Last updated: Mon Sep  7 17:32:53 2015
+
+Reformatting Page. Wait...
+
+
+Another example
+
+$ afinger pkrul@auxio.org
+
+[ auxio.org (2a01:7c8:aab5:116:1010:1010:1010:1010) ]
+Login: pkrul                           Name: Pieter Krul
+Office: AUX-I/O, NL                    Home Phone: +31735185555
+
+On since Sep 29 09:15 on pts/1 from 94.211.64.250
+On since Sep 29 11:02 on pts/2 from 2001:1af8:fe00:47d::2
+On since Sep 29 11:05 on pts/4 from 149.210.176.64
+
+New mail received Tue Sep 29 08:44:41 2015
+  Unread since Mon Apr 27 23:13:02 2015
+
+Public Key:
+
+pub   1024D/B1EF0DC4 2000-10-23
+   Key fingerprint = 5222 5AA2 636F E6D0 7F14  1670 8C3D CE32 B1EF 0DC4
+uid                  Pieter Krul <pkrul@auxio.org>
+uid                  Pieter Krul <p@krul.cc>
+uid                  Pieter Krul <pieter@krul.cc>
+uid                  Pieter Krul <pkrul@snow.nl>
+uid                  Pieter Krul <pieter.krul@snow.nl>
+uid                  [jpeg image of size 16731]
+uid                  [jpeg image of size 5169]
+uid                  Pieter Krul <pieter.krul@pharmapartners.nl>
+sub   1024g/0A261BCF 2000-10-23
+
+Project:
+ Last updated: Tue Sep 29 05:35:25 2015
+
+See https://github.com/pkrul
+
+Plan:
+ Last updated: Tue Sep 29 06:41:00 2015
+
+Reformatting Page. Wait...
+
+
+
+Using afinger as client to query a remote server:
+
+$ afinger hall@bathroom.mit.edu
+[ bathroom.mit.edu (18.243.1.73) ]
+Random Hall Bathroom Server v2.1
+
+                         Bonfire Kitchen: vacant for 55 days
+                         Bonfire  Lounge: vacant for 11 min
+                          Pecker  Lounge: *IN*USE* for 26 min
+                          Pecker Kitchen: vacant for 55 days
+   K 282  L  290 K          Clam Kitchen: vacant for 55 days
+   ... ... ... ...          Clam  Lounge: *IN*USE* for 4 min
+  | o : o | x : o |          BMF  Lounge: vacant for 3 min
+  | o : x | o : o |          BMF Kitchen: vacant for 55 days
+  | o : o | x : o |         Loop Kitchen: vacant for 55 days
+  | o : x | - : o |         Loop  Lounge: vacant for 11 min
+ ~~~~~~~~~~~~~~~~~~~  Black Hole  Lounge: *IN*USE* for 10 min
+                      Black Hole Kitchen: vacant for 55 days
+      o = vacant!        Destiny Kitchen: vacant for 55 days
+      x = in use          Destiny Lounge: *IN*USE* for 4 min
+                                     Foo: vacant for 55 days
+
+For more information finger help@bathroom.mit.edu
+
+(2322546)
+
+
+
+
+6. USING FORTUNE COOKIES
+==============================================================================
+
+The BOFH fortune cookie file (bofh.dat) is included in the afinger package, in
+the cookies directory.
+It is based on [3]The BOFH excuses by Jeff Ballard et al.
+This file can be copied to eg. /usr/share/games/fortunes/ or wherever
+the cookies may be placed on the system, and be used directly by the
+fortune program, if installed.
+ 
+See also: http://www.redellipse.net/code/fortune
+
+
+
+7. LINKS
+==============================================================================
+
+There are currently no Debian, or PKG packages available of Auxio Finger.
+
+The latest version of afinger is 0.43, available as a GNU compressed tar
+archive from:
+
+FTP:  ftp://ftp.auxio.org/pub/auxio/afinger/afinger-latest.tar.gz
+HTTP: http://www.auxio.org/pub/auxio/afinger/afinger-latest.tar.gz
+HTTP: http://www.auxio.net/pub/auxio/afinger/afinger-latest.tar.gz
+
+For other versions of afinger, please visit
+
+FTP:  ftp://ftp.auxio.org/pub/auxio/afinger/
+HTTP: http://www.auxio.org/pub/auxio/afinger/
+
+
+
+8. REFERENCES
+==============================================================================
 
   1. http://www.perl.com/
   2. http://www.opensource.org/
   3. http://www.cs.wisc.edu/~ballard/bofh/
+  4. https://github.com/xinetd-org/xinetd
+
+
+
+9. CONTRIBUTORS
+==============================================================================
+
+Peter Jones  pjones/pmade.org  FreeBSD support
+
+
+
